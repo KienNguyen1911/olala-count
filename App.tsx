@@ -4,6 +4,7 @@ import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import { getStoredUser, loginMock, logoutMock } from './services/storageService';
 import { User } from './types';
+import { PwaUpdatePrompt } from './components/PwaUpdatePrompt';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -38,6 +39,7 @@ const App: React.FC = () => {
 
   return (
     <MemoryRouter>
+      <PwaUpdatePrompt />
       <Routes>
         <Route 
           path="/login" 
