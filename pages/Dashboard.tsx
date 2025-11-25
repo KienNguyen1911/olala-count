@@ -14,17 +14,22 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
+
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [events, setEvents] = useState<Event[]>(storage.getEvents());
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  
+
   // View vs Edit Mode state
   const [isViewMode, setIsViewMode] = useState(false);
-  
+
   // Settings/Profile Drawer state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(storage.getPushStatus());
+
+  // PWA install prompt state
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [canInstall, setCanInstall] = useState(false);
 
   // Form State
   const [formName, setFormName] = useState('');
@@ -32,11 +37,39 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [formDesc, setFormDesc] = useState('');
   const [formCategory, setFormCategory] = useState<'personal' | 'work' | 'trip' | 'other'>('personal');
   const [formTheme, setFormTheme] = useState('#B8FF9F');
-  
+
   // Note System (Hybrid UX)
   const [activeNoteMode, setActiveNoteMode] = useState<'A' | 'B'>('A');
   const [subNotes, setSubNotes] = useState<Note[]>([]);
   const [newSubNote, setNewSubNote] = useState('');
+
+  // Listen for beforeinstallprompt event
+  React.useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setCanInstall(true);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+
+    // Detect if app is already installed
+    const checkInstalled = () => {
+      // For most browsers
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        setCanInstall(false);
+      }
+      // For iOS Safari
+      if ((window.navigator as any).standalone === true) {
+        setCanInstall(false);
+      }
+    };
+    checkInstalled();
+    window.addEventListener('appinstalled', () => setCanInstall(false));
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+    };
+  }, []);
 
   const handleOpenAdd = () => {
     setEditingEvent(null);
@@ -163,7 +196,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   };
 
   const installPWA = () => {
-    alert("Triggering browser install prompt...");
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult: any) => {
+        if (choiceResult.outcome === 'accepted') {
+          // User accepted
+        }
+        setDeferredPrompt(null);
+        setCanInstall(false);
+      });
+    }
   };
 
   // --- Render Helper for the Note/Desc Section (Used in both modes) ---
@@ -364,9 +406,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
            <div>
               <h4 className="font-black text-lg mb-4 uppercase text-black">App Install</h4>
-              <NeoButton onClick={installPWA} variant="secondary" fullWidth>
-                 <Download size={20} /> Install App (PWA)
-              </NeoButton>
+              {canInstall ? (
+                <NeoButton onClick={installPWA} variant="secondary" fullWidth>
+                  <Download size={20} /> Install App (PWA)
+                </NeoButton>
+              ) : (
+                <div className="text-gray-400 text-center text-sm font-medium py-2">
+                  App đã được cài đặt hoặc không khả dụng để cài đặt.
+                </div>
+              )}
            </div>
         </div>
       </Drawer>

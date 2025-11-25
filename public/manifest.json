@@ -2,7 +2,7 @@
   "name": "NEO-COUNT - Progressive Counting App",
   "short_name": "NEO-COUNT",
   "description": "A modern progressive web app for counting and tracking with offline support",
-  "start_url": "/",
+  "start_url": "https://olala-count.vercel.app/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -54,7 +54,7 @@
       "name": "Open App",
       "short_name": "Open",
       "description": "Open NEO-COUNT app",
-      "url": "/",
+      "url": "https://olala-count.vercel.app",
       "icons": [
         {
           "src": "/pwa-192x192.png",
